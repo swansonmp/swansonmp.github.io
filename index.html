@@ -23,16 +23,17 @@
       var gltfLoader = new GLTFLoader();
 
       function initGraphics() {
-        const ROOM_X = 0;
-        const ROOM_Y = 2.5;
-        const ROOM_Z = 0;
-        const DESK_POS_X = 0;
-        const DESK_SIZE_X = 0.9;
-        const DESK_SIZE_Y = 0.75;
-        const DESK_SIZE_Z = 0.6;
-        const KEYBOARD_SIZE_X = 0.36;
-        const KEYBOARD_SIZE_Y = 0.4;
-        const KEYBOARD_SIZE_Z = 0.14;
+        const ROOM_SIZE_X = 420;
+        const ROOM_SIZE_Y = 240;
+        const ROOM_SIZE_Z = 280;
+        const DESK_POS_X = 90;
+        const DESK_POS_Z = ROOM_SIZE_Z;
+        const DESK_SIZE_X = 90;
+        const DESK_SIZE_Y = 75;
+        const DESK_SIZE_Z = 60;
+        const KEYBOARD_SIZE_X = 36;
+        const KEYBOARD_SIZE_Y = 40;
+        const KEYBOARD_SIZE_Z = 14;
 
         // Add scene
         scene = new THREE.Scene();
@@ -45,80 +46,86 @@
         container.appendChild(renderer.domElement);
 
         // Add camera/controls
-        camera = new THREE.PerspectiveCamera(90, window.innerWidth / window.innerHeight, 0.1, 1000);
-        camera.position.set(DESK_POS_X, 1.125, 0.75);
+        camera = new THREE.PerspectiveCamera(90, window.innerWidth / window.innerHeight, 0.1, 10000);
+        camera.position.set(DESK_POS_X, 112.5, 75);
         controls = new FirstPersonControls(camera, renderer.domElement);
-        controls.lookAt(DESK_POS_X, 0.5, 3);
+        controls.lookAt(DESK_POS_X, 50, ROOM_SIZE_Z);
+        controls.movementSpeed = 100;
         controls.lookSpeed = 0.075;
 
         // Add ambient light
-        let ambientLight = new THREE.AmbientLight(0x404040);
+        let ambientLight = new THREE.AmbientLight(0xfffefa, 0.7);
         scene.add(ambientLight);
 
         // Add overhead light
-        let light = new THREE.PointLight(0xf0f0f0, 0.75);
-        light.position.set(0, ROOM_Y-0.25, 0);
+        const LIGHT_OFFSET_Z = 25;
+        let light = new THREE.PointLight(0xfff6ed, 0.4);
+        light.position.set(0, ROOM_SIZE_Y-LIGHT_OFFSET_Z, 0);
         light.castShadow = true;
         scene.add(light);
 
         // Add desk
-        /*
-        let deskGeometry = new THREE.BoxGeometry(DESK_SIZE_X, DESK_SIZE_Y, DESK_SIZE_Z);
-        let deskMaterial = new THREE.MeshStandardMaterial( { color: 0xa52a2a } );
-        let desk = new THREE.Mesh(deskGeometry, deskMaterial);
-        scene.add(desk);
-        desk.position.set(DESK_POS_X, DESK_SIZE_Y/2, 3/2-DESK_SIZE_Z/2);
-        */
         gltfLoader.load('./assets/models/desk.glb', function(gltf) {
-          gltf.scene.position.set(100+DESK_POS_X, DESK_SIZE_Y/2-0.6, -100+3/2-DESK_SIZE_Z/2);
+          gltf.scene.position.set(DESK_POS_X, 0, DESK_POS_Z/2-DESK_SIZE_Z/2);
           scene.add(gltf.scene);
         }, undefined, function(error) {
           console.error(error);
         });
 
         // Add computer
-        let computerGeometry = new THREE.BoxGeometry(0.2, 0.5, 0.4);
+        /*
+        let computerGeometry = new THREE.BoxGeometry(20, 50, 40);
         let computerMaterial = new THREE.MeshStandardMaterial( { color: 0xffffff } );
         let computer = new THREE.Mesh(computerGeometry, computerMaterial);
         scene.add(computer);
-        computer.position.set(DESK_POS_X-(DESK_SIZE_X/2+0.25/2), 0.5/2, 3/2-DESK_SIZE_Z/2);
+        computer.position.set(DESK_POS_X-(DESK_SIZE_X/2+25/2), 50/2, DESK_POS_Z/2-DESK_SIZE_Z/2);
+        */
+        const COMPUTER_SIZE_X = 20;
+        const COMPUTER_SIZE_Z = 48;
+        gltfLoader.load('./assets/models/computer.glb', function(gltf) {
+          gltf.scene.position.set(DESK_POS_X-(DESK_SIZE_X/2+(COMPUTER_SIZE_X+6)/2), 0, DESK_POS_Z/2-DESK_SIZE_Z/2);
+          scene.add(gltf.scene);
+        }, undefined, function(error) {
+          console.error(error);
+        });
 
         // Add monitor
-        const MONITOR_SIZE_X = 0.55;
-        const MONITOR_SIZE_Y = 0.32;
-        const MONITOR_SIZE_Z = 0.02;
-        const MONITOR_OFFSET_Y = 0.05;
-        const MONITOR_OFFSET_Z = 0.05;
+        const MONITOR_SIZE_X = 55;
+        const MONITOR_SIZE_Y = 32;
+        const MONITOR_SIZE_Z = 2;
+        const MONITOR_OFFSET_Y = 5;
+        const MONITOR_OFFSET_Z = 5;
         let monitorGeometry = new THREE.BoxGeometry(MONITOR_SIZE_X, MONITOR_SIZE_Y, MONITOR_SIZE_Z);
         let monitorMaterial = new THREE.MeshStandardMaterial( { color: 0x000000 } );
         let monitor = new THREE.Mesh(monitorGeometry, monitorMaterial);
         scene.add(monitor);
-        monitor.position.set(DESK_POS_X, DESK_SIZE_Y+MONITOR_SIZE_Y/2+MONITOR_OFFSET_Y, 3/2-MONITOR_OFFSET_Z);
+        monitor.position.set(DESK_POS_X, DESK_SIZE_Y+MONITOR_SIZE_Y/2+MONITOR_OFFSET_Y, DESK_POS_Z/2-MONITOR_OFFSET_Z);
 
         // Screen
-        const SCREEN_SIZE_X = 0.54;
-        const SCREEN_SIZE_Y = 0.29;
-        let screenGeometry = new THREE.BoxGeometry(SCREEN_SIZE_X, SCREEN_SIZE_Y, MONITOR_SIZE_Z+0.01);
+        const SCREEN_SIZE_X = 54;
+        const SCREEN_SIZE_Y = 29;
+        let screenGeometry = new THREE.BoxGeometry(SCREEN_SIZE_X, SCREEN_SIZE_Y, MONITOR_SIZE_Z);
         let screenTexture = textureLoader.load('assets/images/screen.png');
         let screenMaterial = new THREE.MeshBasicMaterial( { color: 0xffffff, map: screenTexture } );
         let screen = new THREE.Mesh(screenGeometry, screenMaterial);
         scene.add(screen);
-        screen.position.set(DESK_POS_X, DESK_SIZE_Y+MONITOR_SIZE_Y/2+MONITOR_OFFSET_Y+0.01, 3/2-MONITOR_OFFSET_Z);
+        screen.position.set(DESK_POS_X, DESK_SIZE_Y+MONITOR_SIZE_Y/2+MONITOR_OFFSET_Y+1, DESK_POS_Z/2-MONITOR_OFFSET_Z-Math.pow(2, -6));
 
         // Add cabinet
-        const CABINET_SIZE_X = 0.4;
-        const CABINET_SIZE_Y = 0.7;
-        const CABINET_SIZE_Z = 0.4;
-        let cabinetGeometry = new THREE.BoxGeometry(CABINET_SIZE_X, CABINET_SIZE_Y, CABINET_SIZE_Z);
-        let cabinetMaterial = new THREE.MeshStandardMaterial( { color: 0xdaddd5 } );
-        let cabinet = new THREE.Mesh(cabinetGeometry, cabinetMaterial);
-        scene.add(cabinet);
-        cabinet.position.set(DESK_POS_X+DESK_SIZE_X/2+CABINET_SIZE_X/2+Math.pow(2, -7), CABINET_SIZE_Y/2, 3/2-CABINET_SIZE_Z/2);
+        const CABINET_SIZE_X = 38;
+        const CABINET_SIZE_Y = 68;
+        const CABINET_SIZE_Z = 46;
+        gltfLoader.load('./assets/models/cabinet.glb', function(gltf) {
+          gltf.scene.position.set(DESK_POS_X+DESK_SIZE_X/2+CABINET_SIZE_X/2+1, 0, DESK_POS_Z/2-CABINET_SIZE_Z/2);
+          scene.add(gltf.scene);
+        }, undefined, function(error) {
+          console.error(error);
+        });
 
         // Add info
-        const PAPER_SIZE_X = 0.215;
-        const PAPER_SIZE_Y = Math.pow(2, -9);
-        const PAPER_SIZE_Z = 0.280;
+        const PAPER_SIZE_X = 21.5;
+        const PAPER_SIZE_Y = Math.pow(2, -5);
+        const PAPER_SIZE_Z = 28;
         let infoGeometry = new THREE.BoxGeometry(PAPER_SIZE_X, PAPER_SIZE_Y, PAPER_SIZE_Z);
         let infoTexture = textureLoader.load('assets/images/info.png');
         let infoMaterial = new THREE.MeshStandardMaterial( { color: 0xffffff, map: infoTexture } );
@@ -126,43 +133,78 @@
         scene.add(info);
         info.flipX = true;
         info.flipZ = true;
-        info.position.set(DESK_POS_X+0.2, DESK_SIZE_Y, 3/2-DESK_SIZE_Z/2);
+        info.position.set(DESK_POS_X+20, DESK_SIZE_Y, DESK_POS_Z/2-DESK_SIZE_Z/2);
+
+        // Bed
+        const BED_SIZE_X = 192;
+        const BED_SIZE_Z = 137;
+        gltfLoader.load('./assets/models/bed.glb', function(gltf) {
+          gltf.scene.position.set(-ROOM_SIZE_X/2+BED_SIZE_X/2, 0, ROOM_SIZE_Z/2-BED_SIZE_Z/2);
+          scene.add(gltf.scene);
+        }, undefined, function(error) {
+          console.error(error);
+        });
 
         // Add floor
-        let floorGeometry = new THREE.PlaneGeometry(4, 3);
+        let floorGeometry = new THREE.PlaneGeometry(ROOM_SIZE_X, ROOM_SIZE_Z);
         let floorMaterial = new THREE.MeshStandardMaterial( { color: 0xc3b091, side: THREE.DoubleSide } );
         let floor = new THREE.Mesh(floorGeometry, floorMaterial);
-        floor.rotateX(-Math.PI / 2);
+        floor.rotateX(-Math.PI/2);
         scene.add(floor);
 
         // Add ceiling
         let ceilingMaterial = new THREE.MeshStandardMaterial( { color: 0xf0f0f0, side: THREE.DoubleSide } );
         let ceiling = new THREE.Mesh(floorGeometry, ceilingMaterial);
-        ceiling.position.set(0, 2.5, 0);
-        ceiling.rotateX(-Math.PI / 2);
+        ceiling.position.set(0, ROOM_SIZE_Y, 0);
+        ceiling.rotateX(-Math.PI/2);
         scene.add(ceiling);
 
         // Add back wall
-        let backWallGeometry = new THREE.PlaneGeometry(4, 2.5);
+        let backWallGeometry = new THREE.PlaneGeometry(ROOM_SIZE_X, ROOM_SIZE_Y);
         let wallMaterial = new THREE.MeshStandardMaterial( { color: 0xf0f0f0, side: THREE.DoubleSide } );
         let backWall = new THREE.Mesh(backWallGeometry, wallMaterial);
         scene.add(backWall);
-        backWall.position.set(0, 2.5/2, 1.5);
+        backWall.position.set(0, ROOM_SIZE_Y/2, ROOM_SIZE_Z/2);
 
         // Add side walls
-        let sideWallGeometry = new THREE.PlaneGeometry(3, 2.5);
+        let sideWallGeometry = new THREE.PlaneGeometry(ROOM_SIZE_Z, ROOM_SIZE_Y);
         let leftWall = new THREE.Mesh(sideWallGeometry, wallMaterial);
         let rightWall = new THREE.Mesh(sideWallGeometry, wallMaterial);
         scene.add(leftWall);
         scene.add(rightWall);
-        leftWall.position.set(2, 2.5/2, 0);
-        rightWall.position.set(-2, 2.5/2, 0);
-        leftWall.rotateY(Math.PI / 2);
-        rightWall.rotateY(Math.PI / 2);
+        leftWall.position.set(ROOM_SIZE_X/2, ROOM_SIZE_Y/2, 0);
+        rightWall.position.set(-ROOM_SIZE_X/2, ROOM_SIZE_Y/2, 0);
+        leftWall.rotateY(Math.PI/2);
+        rightWall.rotateY(Math.PI/2);
+
+        // Add resize event
+        window.addEventListener('resize', onWindowResize, false);
+      }
+
+      function onWindowResize() {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      }
+
+      var keyboard = {};
+      function initInput() {
+        window.addEventListener('keydown', function(event) {
+          console.log(event.keyCode);
+          keyboard[event.keyCode] = true;
+        }, false);
+        window.addEventListener('keyup', function(event) {
+          console.log(event.keyCode);
+          keyboard[event.keyCode] = false;
+        }, false);
+        window.addEventListener('scroll', function(event) {
+          console.log(window.scrollY);
+        });
       }
 
       var init = function() {
         initGraphics();
+        initInput();
       }
       var render = function() {
         let deltaTime = clock.getDelta();
@@ -171,7 +213,7 @@
         controls.update(deltaTime);
       };
 
-      init()
+      init();
       render();
     </script>
   </body>
